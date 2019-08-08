@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="description" content="來玩最好玩的阿挖龍吧">
+	<meta name="keywords" content="桌遊,阿瓦隆,卡牌,說謊">
+	<meta name="author" content="HGAME">
+    <title>阿挖龍</title>
+	<link rel="Shortcut Icon" type="image/x-icon" href="assets/images/logoH.png" />
+	<link href="assets/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="assets/css/style.css" rel="stylesheet"/>
+	
+<style>
+.card{
+	background-color:#888800;
+	width:200px;
+	height:200px;
+	font-size:40px;
+	border-style:solid;
+	display:inline-block;
+	margin:10px
+}
+.taskCard{
+	background-color:#425B68;
+	width:200px;
+	height:350px;
+	font-size:50px;
+	border-style:solid;
+	border-color:#25343A;
+	margin:20px;
+}
+</style>
+</head>
+<body >
+	<div id="startPage" style="text-align:center">
+		<h1 >阿挖龍</h1>
+		<button id="startGame" style="font-size:150%;">Start</button>
+    </div>
+	<div id="choicePage" style="text-align:center;display:none">
+		<h1>選擇人數</h1>
+		<button class="personNum" style="font-size:150%;" value=5>Five</button>
+		<button class="personNum" style="font-size:150%;" value=6>Six</button>
+		<button class="personNum" style="font-size:150%;" value=7>Seven</button>
+		<button class="personNum" style="font-size:150%;" value=8>Eight</button>
+		<button class="personNum" style="font-size:150%;" value=9>Nine</button>
+		<button class="personNum" style="font-size:150%;" value=10>ten</button>
+	</div>
+	<div id="character" style="text-align:center;display:none">
+		<h1 >選擇出戰腳色</h1>
+		<div style = "font-size:20px">
+			<input type="checkbox" class="characterOption" value=1 disabled=true checked=true>神(必要)</input><br/>
+			<input type="checkbox" class="characterOption" value=2>天使</input><br/>
+			<input type="checkbox" class="characterOption" value=3 disabled=true checked=true>刺客(必要)</input><br/>
+			<input type="checkbox" class="characterOption" value=4>超級壞蛋</input><br/>
+			<input type="checkbox" class="characterOption" value=5>間諜</input><br/>
+			<input type="checkbox" class="characterOption" value=6>被霸凌的壞人</input><br/>
+			<b>其餘自動以雜魚替補</b>
+		</div>
+		<button id="characterFinish" style="font-size:150%;">確定</button>
+    </div>
+	
+	<div id = "seeYourself" style="text-align:center;display:none">
+		<h1 >查看自己的角色</h1>
+		<button id="openCard" style="font-size:150%;">翻開角色牌</button>
+		<button id="closeCard" style="font-size:150%;display:none">看完了蓋回去</button>
+		<br/><br/><div>由桌長開始順時鐘查看</div>
+		<div id ="card">
+			
+		</div>
+		<button id="killOver" style="font-size:150%;display:none">結束</button>
+	</div>
+	<div id="game" style="text-align:center;display:none">
+		<h1 >遊戲進行</h1>
+		<canvas width=1000 height=400></canvas>
+		<br/>
+		<button id="nextRound" style="font-size:150%;">票數沒過半，下一輪</button>
+		<button id="go" style="font-size:150%;">票數過半，出任務</button>
+		<button id="over" style="font-size:150%;display:none">結算</button>
+	</div>
+	<div id="task" style="text-align:center;display:none">
+		<h1 >任務進行</h1>
+		
+		<div id="success" class="taskCard" style="display:inline-block">成功</div>
+		<div id="fail" class="taskCard" style="display:inline-block">失敗</div><br/>
+		<button id='reset'>投錯了，重置</button>
+		<div style="font-size:30px;display:inline">還剩</div>
+		<div id ="hasNotVote" style="font-size:30px;display:inline"></div>
+		<div style="font-size:30px;display:inline">未投票</div><br/>
+		<button id="openBallot" style="font-size:150%;">投完了開票</button>
+	</div>
+	<div id="taskResult" style="text-align:center;display:none">
+		<h1 >任務結果</h1>
+		<div id="taskFail" style="font-size:100px;">任務失敗!!</div>
+		<div id="taskSuccess" style="font-size:100px;">任務成功!!</div>
+		<br/>
+		<div id ="successNum" style="font-size:30px;display:inline"></div>
+		<div style="font-size:30px;display:inline">成功</div><br/>
+		<div id ="failNum" style="font-size:30px;display:inline"></div>
+		<div style="font-size:30px;display:inline">失敗</div><br/>		
+		<button id="continue" style="font-size:150%;">繼續</button>
+	</div>
+	<div id="gameOver" style="text-align:center;display:none">
+		<h1>任務結束</h1>
+		<div id="goodWin" style="font-size:100px;display:none">好人獲勝!!</div>
+		<div id="badWin" style="font-size:100px;display:none">壞蛋獲勝!!</div>
+	</div>
+	<script src="assets/js/jquery-1.11.0.js"></script>	
+	<script src="assets/js/jcanvas.min.js"></script>
+    <script>
+		function arrayRandom(arr,times){
+			for(var i=0,j=0;j<times;i++){
+				if(i==arr.length){
+					i=-1;
+					j++;
+					continue;
+				}
+				var tempIndex=Math.floor(Math.random()*arr.length);
+				var tempValue=arr[tempIndex];
+				arr[tempIndex]=arr[i];
+				arr[i]=tempValue;
+			}
+		}
+	
+		var personNum;
+		var currentCard;
+		var character=[];
+		var round=1;
+		var voteround=1;
+		var success=0;
+		var fail=0;
+		var hasNotVote;
+		var taskNum=[[2,3,2,3,3],[2,3,4,3,4],[2,3,3,4,4],[3,4,4,5,5],[3,4,4,5,5],[3,4,4,5,5]];
+		var taskResult=[];
+		var taskSuccessNum=0;
+		var taskFailNum=0;
+		var first=true;
+        $(document).ready(function () {
+			$("#startGame").click(function(){
+				$("#startPage").hide();
+				$("#choicePage").show();
+			});
+			$(".personNum").click(function(){
+				personNum = $(this).val();
+				$("#choicePage").hide();
+				$("#character").show();
+				
+			});
+			$("#characterFinish").click(function(){
+				var good=0,bad=0;
+				for(var i =1;i<=6;i++){
+					if($("input[value="+i+"]").prop("checked")){
+						character.push(i);
+						if(i<=2)good++;
+						else bad++;
+					}
+				}
+				
+				var maxGood=Math.floor(personNum/2)+1;
+				while( good < maxGood){
+					character.push(0);
+					good++;
+				}
+				while( bad < personNum-maxGood){
+					character.push(-1);
+					bad++;
+				}
+				arrayRandom(character,5);
+				$("#character").hide();
+				$("#seeYourself").show();
+				for(var i=0;i<personNum;i++){
+					$("#card").append("<div class='card' value="+i+"><img src='assets/images/logoH.png'></img></div>");
+				}
+				currentCard=0;
+				$(".card[value="+currentCard+"]").css("border-color","red");
+			});
+			$("#openCard").click(function(){
+				$(this).hide();
+				$("#closeCard").show();
+				
+				$(".card[value="+currentCard+"] img").attr('src','assets/images/'+character[currentCard]+'.jpg');
+				/*
+				switch(character[currentCard]){
+					case -1:
+						$(".card[value="+currentCard+"]").text("壞雜魚");
+						break;						
+					case 0:
+						$(".card[value="+currentCard+"]").text("好雜魚");
+						break;
+					case 1:
+						$(".card[value="+currentCard+"]").text("梅林");
+						break;
+					case 2:
+						$(".card[value="+currentCard+"]").text("派西維爾");
+						break;
+					case 3:
+						$(".card[value="+currentCard+"]").text("刺客");
+						break;
+					case 4:
+						$(".card[value="+currentCard+"]").text("默德雷德");
+						break;
+					case 5:
+						$(".card[value="+currentCard+"]").text("莫乾那");
+						break;						
+					case 6:
+						$(".card[value="+currentCard+"]").text("奧伯倫");
+						break;						
+				}
+				*/
+			});
+			$("#closeCard").click(function(){
+				$(this).hide();
+				$("#openCard").show();
+				$(".card[value="+currentCard+"]").css("border-color","white");
+				$(".card[value="+currentCard+"] img").attr('src',"assets/images/logoH.png");
+				currentCard++;
+				$(".card[value="+currentCard+"]").css("border-color","red");
+				if(currentCard == personNum){
+					$("#seeYourself").hide();		
+					$("#game").show();
+					for(var i=0;i<5;i++){
+						$('canvas').drawArc({
+							strokeStyle:'white',
+							fillStyle: 'white',
+							strokeWidth: 5,
+							x: 100+130*i, y: 100,
+							radius: 50
+						});
+						$('canvas').drawArc({
+							strokeStyle:'#5f941d',
+							fillStyle: '#5f941d',
+							strokeWidth: 3,
+							x: 500+65*i, y: 300,
+							radius: 25
+						});
+						$('canvas').drawText({
+							fillStyle: '#9cf',
+							strokeStyle: '#25a',
+							strokeWidth: 2,
+							x: 120+130*i, y: 120,
+							fontSize: 48,
+							fontFamily: 'Verdana, sans-serif',
+							text: ""+taskNum[personNum-5][i]
+						});
+					}
+					$('canvas').drawArc({
+						strokeStyle:'red',
+						strokeWidth: 5,
+						x: 100, y: 100,
+						radius: 50
+					});
+					$('canvas').drawArc({
+						strokeStyle:'red',
+						strokeWidth: 3,
+						x: 500, y: 300,
+						radius: 25
+					});
+					if(personNum==7||personNum==8||personNum==9||personNum==10){
+						$('canvas').drawText({
+							fillStyle: '#9cf',
+							strokeStyle: '#25a',
+							strokeWidth: 2,
+							x: 500, y: 50,
+							fontSize:24,
+							fontFamily: 'Verdana, sans-serif',
+							text: "需要二張反對牌"
+						});	
+					}
+				}
+			});
+
+			$("#nextRound").click(function(){
+
+				voteround++;
+
+				$('canvas').drawArc({
+					strokeStyle:'red',
+					strokeWidth: 3,
+					x: 500+65*(voteround-1), y: 300,
+					radius: 25
+				});					
+				$('canvas').drawArc({
+					strokeStyle:'#5f941d',
+					fillStyle:'#5f941d',
+					strokeWidth: 3,
+					x: 500+65*(voteround-2), y: 300,
+					radius: 25
+				});
+				if(voteround==5){
+					$(this).hide();
+					voteround=1;
+					
+				}
+			});
+			$("#go").click(function(){
+				$("#game").hide();
+				$("#task").show();
+				$("#openBallot").hide();
+				hasNotVote=taskNum[personNum-5][round-1];
+				$("#hasNotVote").text(hasNotVote);
+			});
+			$("#success").click(function(){
+				if(hasNotVote>0){
+					hasNotVote--;
+					$("#hasNotVote").text(hasNotVote);
+					success++;
+					if(hasNotVote==0)$("#openBallot").show();
+				}
+			});
+			$("#fail").click(function(){
+				if(hasNotVote>0){
+					hasNotVote--;
+					$("#hasNotVote").text(hasNotVote);
+					fail++;
+					if(hasNotVote==0)$("#openBallot").show();
+				}
+			});
+			$('#reset').click(function(){
+				hasNotVote=taskNum[personNum-5][round-1];
+				$("#hasNotVote").text(hasNotVote);
+				success=0;
+				fail=0;
+				$("#openBallot").hide();
+			});
+			$("#openBallot").click(function(){
+				$("#task").hide();
+				$("#taskResult").show();
+				if((personNum==7||personNum==8||personNum==9||personNum==10)&&round==4){
+					if(fail>=2){
+						$("#taskSuccess").hide();
+						$("#taskFail").show();
+						taskResult.push(0);
+						taskFailNum++;
+					}
+					else {
+						$("#taskSuccess").show();
+						$("#taskFail").hide();
+						taskResult.push(1);
+						taskSuccessNum++;
+					}
+				}
+				else {
+					if(fail>=1){
+						$("#taskSuccess").hide();
+						$("#taskFail").show();
+						taskResult.push(0);
+						taskFailNum++;
+					}
+					else {
+						$("#taskSuccess").show();
+						$("#taskFail").hide();					
+						taskResult.push(1);
+						taskSuccessNum++;
+					}
+				}
+				$("#successNum").text(""+success);
+				$("#failNum").text(""+fail);
+				success=0;
+				fail=0;
+			});
+			$("#continue").click(function(){
+				$("#taskResult").hide();
+				$("#game").show();
+				$("#nextRound").show();
+				round++;
+				voteround=1;
+				if(taskResult[round-2]==0){
+					$('canvas').drawArc({
+						strokeStyle:'#971a29',
+						fillStyle: '#971a29',
+						strokeWidth: 5,
+						x: 100+130*(round-2), y: 100,
+						radius: 50
+					});
+				}
+				else {
+					$('canvas').drawArc({
+						strokeStyle:'#2b3d91',
+						fillStyle: '#2b3d91',
+						strokeWidth: 5,
+						x: 100+130*(round-2), y: 100,
+						radius: 50
+					});
+				}
+				$('canvas').drawText({
+					fillStyle: '#9cf',
+					strokeStyle: '#25a',
+					strokeWidth: 2,
+					x: 120+130*(round-2), y: 120,
+					fontSize: 48,
+					fontFamily: 'Verdana, sans-serif',
+					text: ""+taskNum[personNum-5][round-2]
+				});	
+				if(round!=6&&taskSuccessNum!=3&&taskFailNum!=3){
+					$('canvas').drawArc({
+						strokeStyle:'red',
+						strokeWidth: 5,
+						x: 100+130*(round-1), y: 100,
+						radius: 50
+					});
+					for(var i=0;i<5;i++){
+						$('canvas').drawArc({
+							strokeStyle:'#5f941d',
+							fillStyle:'#5f941d',
+							strokeWidth: 3,
+							x: 500+65*i, y: 300,
+							radius: 25
+						});
+					}
+					$('canvas').drawArc({
+						strokeStyle:'red',
+						strokeWidth: 3,
+						x: 500, y: 300,
+						radius: 25
+					});
+				}
+				else{
+					$("#over").show();
+					$("#go").hide();
+					$("#nextRound").hide();
+				}
+			});
+			$("#over").click(function(){
+				if(taskFailNum==3){
+					$("#game").hide();
+					$("#gameOver").show();
+					$("#badWin").show();
+				}
+				else {
+					$("#game").hide();
+					$("#seeYourself").show();
+					$("#seeYourself > h1").text("刺殺神");
+					$("#openCard").hide();
+					$("#closeCard").hide();
+					for(var i=0;i<personNum;i++){
+						if (character[i] == -1 || (character[i]>=3 && character[i]<=6)){
+							$(".card[value="+i+"] img").attr('src','assets/images/'+character[i]+'.jpg');
+						}
+						/*
+						switch(character[i]){
+							case -1:
+								$(".card[value="+i+"]").text("壞雜魚");
+								break;			
+							case 3:
+								$(".card[value="+i+"]").text("刺客");
+								break;
+							case 4:
+								$(".card[value="+i+"]").text("默德雷德");
+								break;
+							case 5:
+								$(".card[value="+i+"]").text("莫乾那");
+								break;						
+							case 6:
+								$(".card[value="+i+"]").text("奧伯倫");
+								break;						
+						}
+						*/
+					}
+					$(".card").click(function(){
+						var SF=0;
+						switch(character[$(this).attr("value")]){					
+							case 0:
+								$(".card[value="+$(this).attr("value")+"] img").attr('src','assets/images/'+character[$(this).attr("value")]+'.jpg');
+								//$(".card[value="+$(this).attr("value")+"]").text("好雜魚");
+								break;
+							case 1:
+								$(".card[value="+$(this).attr("value")+"] img").attr('src','assets/images/'+character[$(this).attr("value")]+'.jpg');
+								//$(".card[value="+$(this).attr("value")+"]").text("梅林");
+								SF=1;
+								break;
+							case 2:
+								$(".card[value="+$(this).attr("value")+"] img").attr('src','assets/images/'+character[$(this).attr("value")]+'.jpg');
+								//$(".card[value="+$(this).attr("value")+"]").text("派西維爾");
+								break;				
+						}
+						if(first&&SF==1){
+							alert("刺殺成功");
+							$("#killOver").show();
+							$("#killOver").click(function(){
+								$("#seeYourself").hide();
+								$("#gameOver").show();	
+								$("#badWin").show();								
+							});
+
+							first=false;
+						}
+						else if(first&&SF==0){
+							alert("刺殺失敗");
+							$("#killOver").show();
+							$("#killOver").click(function(){
+								$("#seeYourself").hide();
+								$("#gameOver").show();
+								$("#goodWin").show();		
+							});
+							first=false;							
+						}
+					});
+				}
+			});
+		});
+    </script>
+
+</body>
+</html>
