@@ -27,7 +27,7 @@ var h_; //h prime, the reconstructed h values
 function initFourierImage() {
 
 
-    $s('#FTransform').addEventListener('click', function() {
+    $('#FTransform').addEventListener('click', function() {
 		var m = document.getElementById('input');
 		c = m.getContext('2d');     
 		dims[0] = $('#input').attr('width');
