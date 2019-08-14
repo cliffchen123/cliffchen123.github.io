@@ -1,14 +1,32 @@
 function fingerCount(input, output){
 
-	// skin detection
-	
-	skinPoint = []
+	// Gray Word Assumption
+	var Kr=0, Kg=0, Kb=0, gray_sum=0;
 	for(var i=0;i<imgH;i++){
 		for(var j=0;j<imgW;j++){
 			var k = (imgW*i+j)*4;
 			R = input.data[k];
 			G = input.data[k+1];
 			B = input.data[k+2];
+			gray = (R+G+B)/3;
+			gray_sum+=gray;
+			Kr += R;
+			Kg += G;
+			Kb += B;
+		}
+	}	
+	Kr = gray_sum/Kr;
+	Kg = gray_sum/Kg;
+	Kb = gray_sum/Kb;
+
+	// skin detection
+	skinPoint = []
+	for(var i=0;i<imgH;i++){
+		for(var j=0;j<imgW;j++){
+			var k = (imgW*i+j)*4;
+			R = input.data[k]*Kr;
+			G = input.data[k+1]*Kg;
+			B = input.data[k+2]*Kb;
 			Cr = 0.5000*R - 0.4187*G - 0.0813*B + 128 ;
 			if(Cr>=140 && Cr<=160){
 				output.data[k] = 255;
@@ -27,7 +45,7 @@ function fingerCount(input, output){
 	}
 
 	// find skin center
-	var center=[0,0];
+	var center=[0,-20];
 	for(var i=0;i<skinPoint.length;i++){
 		center[0]+=skinPoint[i][0];
 		center[1]+=skinPoint[i][1];
