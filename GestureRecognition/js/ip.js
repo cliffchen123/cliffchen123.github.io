@@ -45,12 +45,13 @@ function fingerCount(input, output){
 	}
 
 	// find skin center
-	var center=[0,-20];
+	var center=[0,0];
 	for(var i=0;i<skinPoint.length;i++){
 		center[0]+=skinPoint[i][0];
 		center[1]+=skinPoint[i][1];
 	}
-	center = [Math.floor(center[0]/skinPoint.length),Math.floor(center[1]/skinPoint.length)];
+	var ybias = Math.floor(imgH/10)
+	center = [Math.floor(center[0]/skinPoint.length)+ybias,Math.floor(center[1]/skinPoint.length)];
 	for(var i=-10;i<10;i++){
 		for(var j=-10;j<10;j++){
 			var k = (imgW*(center[0]+i)+center[1]+j)*4;

@@ -557,32 +557,7 @@
 			d.putImageData(r,0,0);
 			
 			//show wave
-			initWave(700,500);
-			var label=[];
-			label[0]='0';
-			label[wave.length-1]='180';
-			var data = {
-				labels: label,
-				datasets: [
-					{
-						label: "wave",
-						backgroundColor: 'rgba(0, 0, 0, 1)',
-						data: wave
-					},
-					{
-						label: "average",
-						backgroundColor: 'rgba(255, 0, 0, 1)',
-						data: [average]
-					}
-				]
-			};
-			var m = document.getElementById('wave');
-			ctx= m.getContext('2d');		
-			var myBarChart = new Chart(ctx, {
-				type: 'bar',
-				data: data
-			});
-			$('#wave').css('display','');	
+			showWave(wave, average)
 			
 			var m1 = document.getElementById('output');
 			var ctx1 = m1.getContext("2d");
