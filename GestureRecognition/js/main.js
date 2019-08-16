@@ -55,6 +55,7 @@
 	var gaussianEnergy = 50;
 	var videoBtnState = 'stop';
 	var autoFingerCounting;
+	var preImage;
 	window.onload = function(){
 		//init
 		var canvas = document.getElementById("input");
@@ -588,6 +589,7 @@
 			// ev.preventDefault();
 			
 			//auto finger counting in video
+			var preImage = new Array(imgH*imgW*4).fill(0);
 			if(videoBtnState=='stop'){
 				autoFingerCounting = setInterval(function(){
 					$('#processingdiv').show();
@@ -606,15 +608,34 @@
 					d= m.getContext('2d');
 					var s = c.getImageData(0,0,imgW,imgH);
 					r = d.createImageData(imgW,imgH);
+					
 
+					// extract different pixel between pre viedo
+					s_ = s.data.slice()
+					threshold = 20;
+					for(var i=0;i<imgH;i++){
+						for(var j=0;j<imgW;j++){
+							var k = (imgW*i+j)*4;
+							Rd = Math.abs(preImage[k]-s.data[k]);
+							Gd = Math.abs(preImage[k+1]-s.data[k+1]);
+							Bd = Math.abs(preImage[k+2]-s.data[k+2]);
+							if(Rd+Gd+Bd<threshold){
+								s.data[k]=s.data[k+2]=0;
+								s.data[k+1]=0;
+							}
+						}
+					}	
+					preImage = s_
+
+					// finger count
 					var predict_number, wave, average
 					[predict_number, wave, average] = fingerCount(s, r)
 
-					//show processing image
+					// show processing image
 					d.putImageData(r,0,0);
 
-					//show wave
-					showWave(wave, average)					
+					// show wave
+					showWave(wave, average)				
 
 
 					
@@ -622,8 +643,8 @@
 					var ctx1 = m1.getContext("2d");
 					ctx1.clearRect(0, 0, m1.width, m1.height);
 					ctx1.font = "100px Arial";
-					ctx1.fillText(""+predict_number,50,115);			
-				},1000);
+					ctx1.fillText(""+predict_number,50,115);
+				},3000);
 				videoBtnState='running';			
 			}
 			else{

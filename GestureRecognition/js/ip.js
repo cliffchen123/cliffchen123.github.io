@@ -14,7 +14,7 @@ function fingerCount(input, output){
 			Kg += G;
 			Kb += B;
 		}
-	}	
+	}
 	Kr = gray_sum/Kr;
 	Kg = gray_sum/Kg;
 	Kb = gray_sum/Kb;
