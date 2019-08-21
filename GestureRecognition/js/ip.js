@@ -1,23 +1,23 @@
 function fingerCount(input, output){
 
 	// Gray Word Assumption
-	var Kr=0, Kg=0, Kb=0, gray_sum=0;
-	for(var i=0;i<imgH;i++){
-		for(var j=0;j<imgW;j++){
-			var k = (imgW*i+j)*4;
-			R = input.data[k];
-			G = input.data[k+1];
-			B = input.data[k+2];
-			gray = (R+G+B)/3;
-			gray_sum+=gray;
-			Kr += R;
-			Kg += G;
-			Kb += B;
-		}
-	}
-	Kr = gray_sum/Kr;
-	Kg = gray_sum/Kg;
-	Kb = gray_sum/Kb;
+	var Kr=1, Kg=1, Kb=1, gray_sum=0;
+	// for(var i=0;i<imgH;i++){
+	// 	for(var j=0;j<imgW;j++){
+	// 		var k = (imgW*i+j)*4;
+	// 		R = input.data[k];
+	// 		G = input.data[k+1];
+	// 		B = input.data[k+2];
+	// 		gray = (R+G+B)/3;
+	// 		gray_sum+=gray;
+	// 		Kr += R;
+	// 		Kg += G;
+	// 		Kb += B;
+	// 	}
+	// }
+	// Kr = gray_sum/Kr;
+	// Kg = gray_sum/Kg;
+	// Kb = gray_sum/Kb;
 
 	// skin detection
 	skinPoint = []
@@ -120,4 +120,15 @@ function fingerCount(input, output){
 	}
 
 	return [predict_number, wave, average]
+}
+
+function removeBackground(input,rmBackgroundModel){
+	var gray = cv.Mat.zeros(imgH,imgW,cv.CV_8UC1);
+	cv.cvtColor(input,gray,cv.COLOR_BGR2GRAY);
+	var mask= cv.Mat.ones(imgH,imgW,cv.CV_8UC1);
+	rmBackgroundModel.apply(gray,mask);
+	cv.threshold(mask, mask, 0, 1, cv.THRESH_BINARY);
+	moving = whiteBackground.clone();
+	input.copyTo(moving,mask);
+	return moving;
 }

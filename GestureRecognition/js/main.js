@@ -3,7 +3,7 @@
 		$('#output').remove();
 		$('#outputdiv').append("<canvas id='output' ></canvas>");
 		$('#output').attr('width',imgW);
-		$('#output').attr('height',imgH);	
+		$('#output').attr('height',imgH);
 	}
 
 	function initWave(imgW,imgH){
@@ -55,7 +55,7 @@
 	var gaussianEnergy = 50;
 	var videoBtnState = 'stop';
 	var autoFingerCounting;
-	var preImage;
+	whiteBackground=null;
 	window.onload = function(){
 		//init
 		var canvas = document.getElementById("input");
@@ -572,30 +572,35 @@
 		startbutton = document.getElementById('startbutton');
 		navigator.mediaDevices.getUserMedia({video: true, audio: false})
 		.then(function(stream) {
-		  video.srcObject = stream;
-		  video.play();
+			video.srcObject = stream;
+			video.play();	  
 		})
 		.catch(function(err) {
-		  console.log("An error occurred: " + err);
+			console.log("An error occurred: " + err);
 		});
+
+
+
+		// video button
 		startbutton.addEventListener('click', function(ev){
-			// var m = document.getElementById('input');
-			// c = m.getContext('2d');
-			// m.width = video.videoWidth;
-			// m.height = video.videoHeight;
-			// c.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-			// imgH = m.height;
-			// imgW = m.width;
-			// ev.preventDefault();
-			
-			//auto finger counting in video
-			var preImage = new Array(imgH*imgW*4).fill(0);
+			// auto finger counting in video
+			var mog2 = new cv.BackgroundSubtractorMOG2()
 			if(videoBtnState=='stop'){
+				// create a white background
+				$('#input').attr('width',video.videoWidth);
+				$('#input').attr('height',video.videoHeight);
+				var canvas = document.getElementById("input");
+				var ctx = canvas.getContext("2d");
+				ctx.fillStyle = "white";
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				whiteBackground = cv.imread(canvas);
+
+				// create auto recognition routine
 				autoFingerCounting = setInterval(function(){
 					$('#processingdiv').show();
 					$('#wavediv').show();
 					initProcessing(imgW,imgH);
-					initOutput(150,150);				
+					initOutput(150,150);
 					var m = document.getElementById('input');
 					c = m.getContext('2d');
 					m.width = video.videoWidth;
@@ -608,43 +613,38 @@
 					d= m.getContext('2d');
 					var s = c.getImageData(0,0,imgW,imgH);
 					r = d.createImageData(imgW,imgH);
-					
+				
 
-					// extract different pixel between pre viedo
-					s_ = s.data.slice()
-					threshold = 20;
-					for(var i=0;i<imgH;i++){
-						for(var j=0;j<imgW;j++){
-							var k = (imgW*i+j)*4;
-							Rd = Math.abs(preImage[k]-s.data[k]);
-							Gd = Math.abs(preImage[k+1]-s.data[k+1]);
-							Bd = Math.abs(preImage[k+2]-s.data[k+2]);
-							if(Rd+Gd+Bd<threshold){
-								s.data[k]=s.data[k+2]=0;
-								s.data[k+1]=0;
-							}
-						}
-					}	
-					preImage = s_
+					// remove background
+					var m = document.getElementById('input');
+					s=cv.imread(m);
+					moving = removeBackground(s,mog2);
+					cv.imshow(m, moving);
+
+					// posprocess
+					// var m = document.getElementById('input');
+					// s=cv.imread(m)
+					// cv.threshold(s, s, 90, 255, cv.THRESH_BINARY)
+					// cv.imshow(m, s)
+
 
 					// finger count
 					var predict_number, wave, average
-					[predict_number, wave, average] = fingerCount(s, r)
+					[predict_number, wave, average] = fingerCount(moving, r)
 
 					// show processing image
 					d.putImageData(r,0,0);
 
 					// show wave
-					showWave(wave, average)				
+					// showWave(wave, average)
 
-
-					
+					// show predict number
 					var m1 = document.getElementById('output');
 					var ctx1 = m1.getContext("2d");
 					ctx1.clearRect(0, 0, m1.width, m1.height);
 					ctx1.font = "100px Arial";
 					ctx1.fillText(""+predict_number,50,115);
-				},3000);
+				},1000);
 				videoBtnState='running';			
 			}
 			else{
