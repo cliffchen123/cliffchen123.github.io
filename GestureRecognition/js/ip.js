@@ -124,11 +124,28 @@ function fingerCount(input, output){
 
 function removeBackground(input,rmBackgroundModel){
 	var gray = cv.Mat.zeros(imgH,imgW,cv.CV_8UC1);
-	cv.cvtColor(input,gray,cv.COLOR_BGR2GRAY);
+	cv.cvtColor(input,gray,cv.COLOR_RGBA2GRAY);
 	var mask= cv.Mat.ones(imgH,imgW,cv.CV_8UC1);
 	rmBackgroundModel.apply(gray,mask);
 	cv.threshold(mask, mask, 0, 1, cv.THRESH_BINARY);
 	moving = whiteBackground.clone();
 	input.copyTo(moving,mask);
 	return moving;
+}
+
+function faceDetection(input, faceModel){
+	var gray = new cv.Mat();
+	cv.cvtColor(input,gray,cv.COLOR_RGBA2GRAY);
+	let faces = new cv.RectVector();
+	let dst = new cv.Mat();
+	input.copyTo(dst);
+	faceModel.detectMultiScale(gray, faces, 1.1, 3, 0);
+	// draw faces.
+	for (let i = 0; i < faces.size(); ++i) {
+		let face = faces.get(i);
+		let point1 = new cv.Point(face.x, face.y);
+		let point2 = new cv.Point(face.x + face.width, face.y + face.height);
+		cv.rectangle(dst, point1, point2, [255, 0, 0, 255]);
+	}
+	return dst
 }
