@@ -597,19 +597,12 @@
 
 				// create face detection model
 				let classifier = new cv.CascadeClassifier();  // initialize classifier
-
 				let utils = new Utils('errorMessage'); //use utils class
-
-				let faceCascadeFile = '/haarcascade_frontalface_default.xml'; // path to xml
-
-				// use createFileFromUrl to "pre-build" the xml
-				utils.createFileFromUrl(faceCascadeFile, faceCascadeFile, () => {
+				let faceCascadeFile = 'haarcascade_frontalface_default.xml'; // path to xml
+				utils.createFileFromUrl(faceCascadeFile, faceCascadeFile, () => { // use createFileFromUrl to "pre-build" the xml
 				    classifier.load(faceCascadeFile); // in the callback, load the cascade from file 
 				});
 
-				
-
-				
 
 				// create auto recognition routine
 				autoFingerCounting = setInterval(function(){
@@ -631,17 +624,20 @@
 					r = d.createImageData(imgW,imgH);
 				
 
-					// // remove background
-					// var m = document.getElementById('input');
-					// s=cv.imread(m);
-					// moving = removeBackground(s,mog2);
-					// cv.imshow(m, moving);
+
 
 					// face detection
 					var m = document.getElementById('input');
 					s=cv.imread(m);
 					face = faceDetection(s,classifier)
 					cv.imshow(m, face);
+
+
+					// remove background
+					// var m = document.getElementById('input');
+					// s=cv.imread(m);
+					moving = removeBackground(face,mog2);
+					cv.imshow(m, moving);
 
 					// posprocess
 					// var m = document.getElementById('input');

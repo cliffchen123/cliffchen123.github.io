@@ -145,7 +145,7 @@ function faceDetection(input, faceModel){
 		let face = faces.get(i);
 		let point1 = new cv.Point(face.x, face.y);
 		let point2 = new cv.Point(face.x + face.width, face.y + face.height);
-		cv.rectangle(dst, point1, point2, [255, 0, 0, 255]);
+		cv.rectangle(dst, point1, point2, [255, 255, 255, 255],-1);
 	}
 	return dst
 }
