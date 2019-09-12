@@ -1,9 +1,22 @@
-body{
-	background: url( "../img/bg2.jpg" ) left top;
-	background-repeat: repeat;			
-	background-attachment:fixed;
-	font-family:Microsoft JhengHei,sans-serif;
+/* Move down content because we have a fixed navbar that is 3.5rem tall */
+body {
+  padding-top: 3.5rem;
 }
-canvas{
-	border:1px solid #000000;
+main {
+	background-image: url('../img/bg2.jpg'); 
+	background-repeat: no-repeat; 
+	background-size: cover; 
+	background-position: center center;
+}
+.jumbotron{
+	/*color:white;*/
+	background-image: url('../img/bg1.jpg'); 
+	background-repeat: no-repeat; 
+	background-size: cover; 
+	background-position: center center;
+	background-attachment:fixed;
+}
+
+.introductionLogo{
+	width: 15% ;
 }
