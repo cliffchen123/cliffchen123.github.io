@@ -48,6 +48,7 @@
 		});
 		$('#wave').css('display','');
 	}
+	
 	c=null;
 	var r;
 	var img;

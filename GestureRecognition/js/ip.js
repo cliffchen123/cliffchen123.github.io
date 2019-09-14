@@ -122,6 +122,13 @@ function fingerCount(input, output){
 	return [predict_number, wave, average]
 }
 
+function fingerCountDNN(input){
+	import * as tf from 'js/tf.min.js';
+	const model = await tf.loadLayersModel('data/model-wave/model.json');
+	model.predict(tf.tensor2d([5], [1, 1])).print();
+	return predict_number
+}
+
 function removeBackground(input,rmBackgroundModel){
 	var gray = cv.Mat.zeros(imgH,imgW,cv.CV_8UC1);
 	cv.cvtColor(input,gray,cv.COLOR_RGBA2GRAY);
