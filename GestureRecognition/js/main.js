@@ -48,7 +48,7 @@
 		});
 		$('#wave').css('display','');
 	}
-	
+
 	c=null;
 	var r;
 	var img;
@@ -97,6 +97,7 @@
 
 			var predict_number, wave, average
 			[predict_number, wave, average] = fingerCount(s, r)
+			var aaa=fingerCountDNN(s,r)
 
 			//show processing image
 			d.putImageData(r,0,0);
