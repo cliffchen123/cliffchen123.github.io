@@ -97,7 +97,6 @@
 
 			var predict_number, wave, average
 			[predict_number, wave, average] = fingerCount(s, r)
-			var aaa=fingerCountDNN(s,r)
 
 			//show processing image
 			d.putImageData(r,0,0);
@@ -111,7 +110,19 @@
 			ctx1.font = "100px Arial";
 			ctx1.fillText(""+predict_number,50,115);
 		});
-
+		$('#gestureDNN').click(async function(){
+			initOutput(150,150);
+			var s = c.getImageData(0,0,imgW,imgH);
+			var m = document.getElementById('processing');
+			d= m.getContext('2d');
+			r = d.createImageData(imgW,imgH);
+			var result= await fingerCountDNN(s,r)
+			var m1 = document.getElementById('output');
+			var ctx1 = m1.getContext("2d");
+			ctx1.clearRect(0, 0, m1.width, m1.height);
+			ctx1.font = "100px Arial";
+			ctx1.fillText(""+result,50,115);
+		});
 		// Video
 		video = document.getElementById('video');
 		startbutton = document.getElementById('startbutton');

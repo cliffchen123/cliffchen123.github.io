@@ -208,7 +208,8 @@ async function fingerCountDNN(input,output){
 		if(dis!=0) wave.push(dis);
 	}
 	const model = await tf.loadLayersModel('https://cliffchen123.github.io/GestureRecognition/data/model-wave/model.json');
-	model.predict(tf.tensor2d(wave)).print();
+	probability = model.predict(tf.tensor2d([wave])).dataSync();
+	predict_number = probability.indexOf(Math.max(...probability));
 	return predict_number;
 }
 
