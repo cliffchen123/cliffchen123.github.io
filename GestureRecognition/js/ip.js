@@ -187,6 +187,8 @@ async function fingerCountDNN(input,output){
 	// create wave
 	var wave =[];
 	var average=0;
+	waveLength = 0
+	for(var i=0.1;i<=Math.PI;i+=0.05)waveLength+=1
 	for(var i=0.1;i<=Math.PI;i+=0.05){
 		var temp=[0,0];				
 		for(var j=1;j!=0;j++){
@@ -207,6 +209,8 @@ async function fingerCountDNN(input,output){
 		average+=dis;
 		if(dis!=0) wave.push(dis);
 	}
+	for(var i=0;)
+	wave = wave+[0]*(waveLength-len(wave))
 	const model = await tf.loadLayersModel('https://cliffchen123.github.io/GestureRecognition/data/model-wave/model.json');
 	probability = model.predict(tf.tensor2d([wave])).dataSync();
 	predict_number = probability.indexOf(Math.max(...probability));
