@@ -76,13 +76,13 @@
 			$('#wavediv').hide();
 		});
 	
-		//Output image file
-		function download() {
-			var canvas = document.getElementById('output');
-			var dt = canvas.toDataURL('image/bmp');
-			this.href = dt;
-		};
-		downloadLnk.addEventListener('click', download, false);	
+		// //Output image file
+		// function download() {
+		// 	var canvas = document.getElementById('output');
+		// 	var dt = canvas.toDataURL('image/bmp');
+		// 	this.href = dt;
+		// };
+		// downloadLnk.addEventListener('click', download, false);	
 		
 		//Finger Counting
 		$('#gesture').click(function(){
@@ -110,6 +110,8 @@
 			ctx1.font = "100px Arial";
 			ctx1.fillText(""+predict_number,50,115);
 		});
+
+		//Finger Counting using DNN model
 		$('#gestureDNN').click(async function(){
 			initOutput(150,150);
 			var s = c.getImageData(0,0,imgW,imgH);
@@ -123,6 +125,7 @@
 			ctx1.font = "100px Arial";
 			ctx1.fillText(""+result,50,115);
 		});
+
 		// Video
 		video = document.getElementById('video');
 		startbutton = document.getElementById('startbutton');
@@ -134,8 +137,6 @@
 		.catch(function(err) {
 			console.log("An error occurred: " + err);
 		});
-
-
 
 		// video button
 		startbutton.addEventListener('click', function(ev){
@@ -159,7 +160,6 @@
 				    classifier.load(faceCascadeFile); // in the callback, load the cascade from file 
 				});
 
-
 				// create auto recognition routine
 				autoFingerCounting = setInterval(function(){
 					$('#processingdiv').show();
@@ -179,28 +179,15 @@
 					var s = c.getImageData(0,0,imgW,imgH);
 					r = d.createImageData(imgW,imgH);
 				
-
-
-
 					// face detection
 					var m = document.getElementById('input');
 					s=cv.imread(m);
 					face = faceDetection(s,classifier)
 					cv.imshow(m, face);
 
-
 					// remove background
-					// var m = document.getElementById('input');
-					// s=cv.imread(m);
 					moving = removeBackground(face,mog2);
 					cv.imshow(m, moving);
-
-					// posprocess
-					// var m = document.getElementById('input');
-					// s=cv.imread(m)
-					// cv.threshold(s, s, 90, 255, cv.THRESH_BINARY)
-					// cv.imshow(m, s)
-
 
 					// finger count
 					var predict_number, wave, average
@@ -231,15 +218,16 @@
 
 	}
 
+	$("#uploadImage").change(function(){
+		readImage( this );
+		$("#gesture").attr("disabled", false);
+		$("#gestureDNN").attr("disabled", false);
+	});
 
-    $("#uploadImage").change(function(){
-      readImage( this );
-    });
- 
-    function readImage(input) {
-      if ( input.files && input.files[0] ) {
-        var FR= new FileReader();
-        FR.onload = function(e) {
+	function readImage(input) {
+		if ( input.files && input.files[0] ) {
+			var FR= new FileReader();
+			FR.onload = function(e) {
 			var m = document.getElementById('input');
 			c = m.getContext('2d');
 			img = new Image();
@@ -252,10 +240,10 @@
 				$('#output').attr('width',imgW)
 				$('#output').attr('height',imgH)				
 				c.drawImage(img,0,0);
-			}		  
-        };       
-        FR.readAsDataURL( input.files[0] );
-      }
-	  
-    }
+			}
+			};
+			FR.readAsDataURL( input.files[0] );
+		}
+	}
+
 })();

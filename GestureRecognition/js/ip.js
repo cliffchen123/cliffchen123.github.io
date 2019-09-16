@@ -1,25 +1,4 @@
-function fingerCount(input, output){
-
-	// Gray Word Assumption
-	var Kr=1, Kg=1, Kb=1, gray_sum=0;
-	// for(var i=0;i<imgH;i++){
-	// 	for(var j=0;j<imgW;j++){
-	// 		var k = (imgW*i+j)*4;
-	// 		R = input.data[k];
-	// 		G = input.data[k+1];
-	// 		B = input.data[k+2];
-	// 		gray = (R+G+B)/3;
-	// 		gray_sum+=gray;
-	// 		Kr += R;
-	// 		Kg += G;
-	// 		Kb += B;
-	// 	}
-	// }
-	// Kr = gray_sum/Kr;
-	// Kg = gray_sum/Kg;
-	// Kb = gray_sum/Kb;
-
-	// skin detection
+function skinDetection(input,output,[Kr,Kg,Kb]) {
 	skinPoint = []
 	for(var i=0;i<imgH;i++){
 		for(var j=0;j<imgW;j++){
@@ -43,25 +22,42 @@ function fingerCount(input, output){
 			output.data[k+3] = 255;
 		}
 	}
+	return skinPoint
+}
 
-	// find skin center
-	var center=[0,0];
-	for(var i=0;i<skinPoint.length;i++){
-		center[0]+=skinPoint[i][0];
-		center[1]+=skinPoint[i][1];
-	}
-	var ybias = Math.floor(imgH/10)
-	center = [Math.floor(center[0]/skinPoint.length)+ybias,Math.floor(center[1]/skinPoint.length)];
-	for(var i=-10;i<10;i++){
-		for(var j=-10;j<10;j++){
-			var k = (imgW*(center[0]+i)+center[1]+j)*4;
-			output.data[k]=0;
-			output.data[k+1]=0;
-			output.data[k+2]=255;
+function whiteBalance(input){
+	var Kr=1, Kg=1, Kb=1, gray_sum=0;
+	for(var i=0;i<imgH;i++){
+		for(var j=0;j<imgW;j++){
+			var k = (imgW*i+j)*4;
+			R = input.data[k];
+			G = input.data[k+1];
+			B = input.data[k+2];
+			gray = (R+G+B)/3;
+			gray_sum+=gray;
+			Kr += R;
+			Kg += G;
+			Kb += B;
 		}
 	}
+	Kr = gray_sum/Kr;
+	Kg = gray_sum/Kg;
+	Kb = gray_sum/Kb;
+	return [Kr,Kg,Kb]
+}
 
-	// create wave
+function findCenter(points) {
+	var center=[0,0];
+	for(var i=0;i<points.length;i++){
+		center[0]+=points[i][0];
+		center[1]+=points[i][1];
+	}
+	var ybias = Math.floor(imgH/10)
+	center = [Math.floor(center[0]/points.length)+ybias,Math.floor(center[1]/points.length)];
+	return center
+}
+
+function FindWaveFeature(input,center){
 	var wave =[];
 	var average=0;
 	for(var i=0.1;i<=Math.PI;i+=0.05){
@@ -73,9 +69,9 @@ function fingerCount(input, output){
 			var y = center[0]-ybias;
 			if(x>imgW||x<0||y<0) break;
 			var k = (imgW*y+x)*4;
-			if(output.data[k]==255){
-				output.data[k+1]=0
-				output.data[k+2]=0
+			if(input.data[k]==255){
+				input.data[k+1]=0
+				input.data[k+2]=0
 				temp[0]=xbias;
 				temp[1]=ybias;
 			}
@@ -84,9 +80,35 @@ function fingerCount(input, output){
 		average+=dis;
 		if(dis!=0) wave.push(dis);
 	}
-
-	// compute average and mountain
 	average /= wave.length;
+	return [wave,average]
+}
+
+function fingerCount(input, output){
+
+	// Gray Word Assumption
+	var Kr=1, Kg=1, Kb=1;
+	// [Kr,Kg,Kb] = whiteBalance(input);
+
+	// skin detection
+	var skinPoint = skinDetection(input,output,[Kr,Kg,Kb]);
+
+	// find skin center
+	var center = findCenter(skinPoint)
+	for(var i=-10;i<10;i++){
+		for(var j=-10;j<10;j++){
+			var k = (imgW*(center[0]+i)+center[1]+j)*4;
+			output.data[k]=0;
+			output.data[k+1]=0;
+			output.data[k+2]=255;
+		}
+	}
+
+	// create wave
+	var wave,average;
+	[wave,average] = FindWaveFeature(output,center);
+
+	// compute mountain
 	wave.splice(0,0,0);
 	wave.push(0);
 	var mountain = [];
@@ -124,57 +146,15 @@ function fingerCount(input, output){
 
 async function fingerCountDNN(input,output){
 	// Gray Word Assumption
-	var Kr=1, Kg=1, Kb=1, gray_sum=0;
-	// for(var i=0;i<imgH;i++){
-	// 	for(var j=0;j<imgW;j++){
-	// 		var k = (imgW*i+j)*4;
-	// 		R = input.data[k];
-	// 		G = input.data[k+1];
-	// 		B = input.data[k+2];
-	// 		gray = (R+G+B)/3;
-	// 		gray_sum+=gray;
-	// 		Kr += R;
-	// 		Kg += G;
-	// 		Kb += B;
-	// 	}
-	// }
-	// Kr = gray_sum/Kr;
-	// Kg = gray_sum/Kg;
-	// Kb = gray_sum/Kb;
+	var Kr=1, Kg=1, Kb=1;
+	// [Kr,Kg,Kb] = whiteBalance(input);
 
 	// skin detection
-	skinPoint = []
-	for(var i=0;i<imgH;i++){
-		for(var j=0;j<imgW;j++){
-			var k = (imgW*i+j)*4;
-			R = input.data[k]*Kr;
-			G = input.data[k+1]*Kg;
-			B = input.data[k+2]*Kb;
-			Cr = 0.5000*R - 0.4187*G - 0.0813*B + 128 ;
-			if(Cr>=140 && Cr<=160){
-				output.data[k] = 255;
-				output.data[k+1] = 255;
-				output.data[k+2] = 255;
-				skinPoint.push([i,j])
-			}
-			else{
-				output.data[k] = 0;
-				output.data[k+1] = 0;
-				output.data[k+2] = 0;				
-			}
-
-			output.data[k+3] = 255;
-		}
-	}
+	var skinPoint = skinDetection(input,output,[Kr,Kg,Kb]);
+	
 
 	// find skin center
-	var center=[0,0];
-	for(var i=0;i<skinPoint.length;i++){
-		center[0]+=skinPoint[i][0];
-		center[1]+=skinPoint[i][1];
-	}
-	var ybias = Math.floor(imgH/10)
-	center = [Math.floor(center[0]/skinPoint.length)+ybias,Math.floor(center[1]/skinPoint.length)];
+	var center = findCenter(skinPoint)
 	for(var i=-10;i<10;i++){
 		for(var j=-10;j<10;j++){
 			var k = (imgW*(center[0]+i)+center[1]+j)*4;
@@ -185,32 +165,14 @@ async function fingerCountDNN(input,output){
 	}
 
 	// create wave
-	var wave =[];
-	var average=0;
-	waveLength = 0
+	var waveLength = 0
 	for(var i=0.1;i<=Math.PI;i+=0.05)waveLength+=1
-	for(var i=0.1;i<=Math.PI;i+=0.05){
-		var temp=[0,0];				
-		for(var j=1;j!=0;j++){
-			var xbias = Math.round(Math.cos(i)*j);
-			var x = center[1]+xbias;
-			var ybias = Math.round(Math.sin(i)*j);
-			var y = center[0]-ybias;
-			if(x>imgW||x<0||y<0) break;
-			var k = (imgW*y+x)*4;
-			if(output.data[k]==255){
-				output.data[k+1]=0
-				output.data[k+2]=0
-				temp[0]=xbias;
-				temp[1]=ybias;
-			}
-		}
-		var dis = Math.sqrt(temp[0]*temp[0]+temp[1]*temp[1]);
-		average+=dis;
-		if(dis!=0) wave.push(dis);
+	var wave,average;
+	[wave,average] = FindWaveFeature(output,center);
+	zerosNum = waveLength-wave.length;
+	for(var i=0;i<zerosNum;i++){
+		wave.push(0)
 	}
-	for(var i=0;)
-	wave = wave+[0]*(waveLength-len(wave))
 	const model = await tf.loadLayersModel('https://cliffchen123.github.io/GestureRecognition/data/model-wave/model.json');
 	probability = model.predict(tf.tensor2d([wave])).dataSync();
 	predict_number = probability.indexOf(Math.max(...probability));
