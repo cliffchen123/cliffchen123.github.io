@@ -174,27 +174,24 @@
 					imgH = m.height;
 					imgW = m.width;
 
-					var m = document.getElementById('processing');
-					d= m.getContext('2d');
-					var s = c.getImageData(0,0,imgW,imgH);
-					r = d.createImageData(imgW,imgH);
-				
 					// face detection
 					var m = document.getElementById('input');
 					s=cv.imread(m);
-					face = faceDetection(s,classifier)
+					face = faceMasking(s,classifier)
 					cv.imshow(m, face);
 
 					// remove background
-					moving = removeBackground(face,mog2);
-					cv.imshow(m, moving);
+					// moving = removeBackground(face,mog2);
+					// cv.imshow(m, moving);
 
 					// finger count
-					var predict_number, wave, average
-					[predict_number, wave, average] = fingerCount(moving, r)
+					var predict_number, wave, average;
+					var hand = face.clone();
+					[predict_number, wave, average] = fingerCount(face, hand)
 
 					// show processing image
-					d.putImageData(r,0,0);
+					var m = document.getElementById('processing');
+					cv.imshow(m, hand);
 
 					// show wave
 					// showWave(wave, average)

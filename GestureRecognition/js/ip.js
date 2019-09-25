@@ -46,15 +46,30 @@ function whiteBalance(input){
 	return [Kr,Kg,Kb]
 }
 
-function findCenter(points) {
+function findCenter(points, ybias) {
 	var center=[0,0];
 	for(var i=0;i<points.length;i++){
 		center[0]+=points[i][0];
 		center[1]+=points[i][1];
 	}
-	var ybias = Math.floor(imgH/10)
-	center = [Math.floor(center[0]/points.length)+ybias,Math.floor(center[1]/points.length)];
+	var movement = Math.floor(imgH*ybias)
+	center = [Math.floor(center[0]/points.length)+movement,Math.floor(center[1]/points.length)];
 	return center
+}
+
+function centerAround(input,center,wScale,hScale) {
+	for(var i=-hScale*imgH/4*3;i<hScale*imgH/4;i++){
+		for(var j=-wScale*imgW/2;j<wScale*imgW/2;j++){
+			var k = (imgW*(center[0]+i)+center[1]+j)*4;
+			input.data[k]=0;
+			input.data[k+1]=0;
+			input.data[k+2]=255;
+		}
+	}
+	let dst = new cv.Mat();
+	let rect = new cv.Rect(center[0]+(-hScale*imgH/4*3), center[1]+(-wScale*imgW/2), center[0]+(hScale*imgH/4), center[1]+(wScale*imgW/2));
+	dst = input.roi(rect);
+	return dst
 }
 
 function FindWaveFeature(input,center){
@@ -67,8 +82,8 @@ function FindWaveFeature(input,center){
 			var x = center[1]+xbias;
 			var ybias = Math.round(Math.sin(i)*j);
 			var y = center[0]-ybias;
-			if(x>imgW||x<0||y<0) break;
-			var k = (imgW*y+x)*4;
+			if(x>input.cols||x<0||y<0) break;
+			var k = (input.cols*y+x)*4;
 			if(input.data[k]==255){
 				input.data[k+1]=0
 				input.data[k+2]=0
@@ -94,19 +109,25 @@ function fingerCount(input, output){
 	var skinPoint = skinDetection(input,output,[Kr,Kg,Kb]);
 
 	// find skin center
-	var center = findCenter(skinPoint)
+	var center = findCenter(skinPoint,0.1)
+
+	// find hand range
+	handRange = centerAround(output,center,0.3,0.6)
+
+
+
 	for(var i=-10;i<10;i++){
 		for(var j=-10;j<10;j++){
 			var k = (imgW*(center[0]+i)+center[1]+j)*4;
 			output.data[k]=0;
-			output.data[k+1]=0;
-			output.data[k+2]=255;
+			output.data[k+1]=255;
+			output.data[k+2]=0;
 		}
 	}
 
 	// create wave
 	var wave,average;
-	[wave,average] = FindWaveFeature(output,center);
+	[wave,average] = FindWaveFeature(handRange,center);
 
 	// compute mountain
 	wave.splice(0,0,0);
@@ -154,7 +175,7 @@ async function fingerCountDNN(input,output){
 	
 
 	// find skin center
-	var center = findCenter(skinPoint)
+	var center = findCenter(skinPoint,0.1)
 	for(var i=-10;i<10;i++){
 		for(var j=-10;j<10;j++){
 			var k = (imgW*(center[0]+i)+center[1]+j)*4;
@@ -190,7 +211,7 @@ function removeBackground(input,rmBackgroundModel){
 	return moving;
 }
 
-function faceDetection(input, faceModel){
+function faceMasking(input, faceModel){
 	var gray = new cv.Mat();
 	cv.cvtColor(input,gray,cv.COLOR_RGBA2GRAY);
 	let faces = new cv.RectVector();
@@ -201,7 +222,7 @@ function faceDetection(input, faceModel){
 	for (let i = 0; i < faces.size(); ++i) {
 		let face = faces.get(i);
 		let point1 = new cv.Point(face.x, face.y);
-		let point2 = new cv.Point(face.x + face.width, face.y + face.height);
+		let point2 = new cv.Point(face.x + face.width, face.y + face.height*1.4);
 		cv.rectangle(dst, point1, point2, [255, 255, 255, 255],-1);
 	}
 	return dst
