@@ -187,11 +187,11 @@
 					// finger count
 					var predict_number, wave, average;
 					var hand = face.clone();
-					[predict_number, wave, average] = fingerCount(face, hand)
+					[predict_number, wave, average, handRange] = fingerCount(face, hand)
 
 					// show processing image
 					var m = document.getElementById('processing');
-					cv.imshow(m, hand);
+					cv.imshow(m, handRange);
 
 					// show wave
 					// showWave(wave, average)
@@ -202,6 +202,11 @@
 					ctx1.clearRect(0, 0, m1.width, m1.height);
 					ctx1.font = "100px Arial";
 					ctx1.fillText(""+predict_number,50,115);
+
+					// memory free
+					face.delete();
+					hand.delete();
+					s.delete()
 				},1000);
 				videoBtnState='running';			
 			}

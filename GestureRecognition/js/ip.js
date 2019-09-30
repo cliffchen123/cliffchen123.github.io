@@ -58,17 +58,16 @@ function findCenter(points, ybias) {
 }
 
 function centerAround(input,center,wScale,hScale) {
-	for(var i=-hScale*imgH/4*3;i<hScale*imgH/4;i++){
-		for(var j=-wScale*imgW/2;j<wScale*imgW/2;j++){
-			var k = (imgW*(center[0]+i)+center[1]+j)*4;
-			input.data[k]=0;
-			input.data[k+1]=0;
-			input.data[k+2]=255;
-		}
-	}
 	let dst = new cv.Mat();
-	let rect = new cv.Rect(center[0]+(-hScale*imgH/4*3), center[1]+(-wScale*imgW/2), center[0]+(hScale*imgH/4), center[1]+(wScale*imgW/2));
-	dst = input.roi(rect);
+	[x1,y1,x2,y2] = [center[1]+(-wScale*imgW/2), center[0]+(-hScale*imgH/4*3), wScale*imgW, hScale*imgH];
+	if(x1<0) x1=0;
+	if(y1<0) y1=0;
+	if(x1+x2>=imgW) x2=imgW-1-x1;
+	if(y1+y2>=imgH) y2=imgH-1-y1;
+	cv.rectangle(input,new cv.Point(x1,y1), new cv.Point(x1+x2,y1+y2),new cv.Scalar(0, 0, 255, 255),3);
+	let rect = new cv.Rect(x1,y1,x2,y2);
+	dst = input.roi(rect).clone();
+
 	return dst
 }
 
@@ -112,7 +111,9 @@ function fingerCount(input, output){
 	var center = findCenter(skinPoint,0.1)
 
 	// find hand range
-	handRange = centerAround(output,center,0.3,0.6)
+	wScale = 0.3;
+	hScale = 0.6;
+	handRange = centerAround(output,center,wScale,hScale)
 
 
 
@@ -127,7 +128,7 @@ function fingerCount(input, output){
 
 	// create wave
 	var wave,average;
-	[wave,average] = FindWaveFeature(handRange,center);
+	[wave,average] = FindWaveFeature(handRange,[hScale*imgH/4*3,wScale*imgW/2]);
 
 	// compute mountain
 	wave.splice(0,0,0);
@@ -162,7 +163,7 @@ function fingerCount(input, output){
 		}
 	}
 
-	return [predict_number, wave, average]
+	return [predict_number, wave, average, handRange]
 }
 
 async function fingerCountDNN(input,output){
@@ -208,6 +209,8 @@ function removeBackground(input,rmBackgroundModel){
 	cv.threshold(mask, mask, 0, 1, cv.THRESH_BINARY);
 	moving = whiteBackground.clone();
 	input.copyTo(moving,mask);
+	mask.delete()
+	gray.delete()
 	return moving;
 }
 
@@ -225,5 +228,9 @@ function faceMasking(input, faceModel){
 		let point2 = new cv.Point(face.x + face.width, face.y + face.height*1.4);
 		cv.rectangle(dst, point1, point2, [255, 255, 255, 255],-1);
 	}
+
+	gray.delete()
+	faces.delete()
+
 	return dst
 }
