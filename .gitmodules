@@ -1,0 +1,3 @@
+[submodule "Avalon"]
+	path = Avalon
+	url = git@github.com:cliffchen123/Avalon.git
