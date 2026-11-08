@@ -1,3 +1,6 @@
 [submodule "Avalon"]
 	path = Avalon
 	url = git@github.com:cliffchen123/Avalon.git
+[submodule "Career-Experience-Sharing"]
+	path = Career-Experience-Sharing
+	url = git@github.com:cliffchen123/Career-Experience-Sharing.git
